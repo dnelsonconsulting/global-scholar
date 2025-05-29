@@ -16,6 +16,9 @@ import Link from "next/link";
 
 GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
+const UG_LOCATION_ID = 'aed19127-b7b9-47e7-bf8c-cc597b9514db';
+const GLOBAL_LOCATION_ID = 'b49e9c4f-629e-4314-b459-21d7b97dbf5d';
+
 const LoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
   <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col items-center justify-center">
     <div className="text-center">
@@ -66,6 +69,7 @@ const ApplicationForm: React.FC = () => {
   const router = useRouter();
   const [appSaving, setAppSaving] = useState(false);
   const [appSaveError, setAppSaveError] = useState<string | null>(null);
+  const [appSaveInfo, setAppSaveInfo] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [nationalIdCountry, setNationalIdCountry] = useState('');
   const [nationalIdFile, setNationalIdFile] = useState<File | null>(null);
@@ -78,6 +82,37 @@ const ApplicationForm: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  useEffect(() => {
+    const prefillStudentInfo = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      // Fetch student record
+      const { data: student } = await supabase
+        .from('student')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (student) {
+        setFormData(prev => ({
+          ...prev,
+          first_name: student.first_name || '',
+          middle_name: student.middle_name || '',
+          last_name: student.last_name || '',
+          additional_name: student.additional_name || '',
+          email: user.email || '',
+          whats_app: student.whats_app || '',
+          phone: student.phone || '',
+          date_of_birth: student.date_of_birth || '',
+          gender_id: student.gender_id || '',
+          nationality_country_id: student.nationality_country_id || '',
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, email: user.email || '' }));
+      }
+    };
+    prefillStudentInfo();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -145,27 +180,41 @@ const ApplicationForm: React.FC = () => {
   const saveStep2ToSupabase = async () => {
     setAppSaving(true);
     setAppSaveError(null);
+    setAppSaveInfo(null);
     try {
       if (!studentId) {
         setAppSaveError('Student record not found.');
         setAppSaving(false);
         return false;
       }
-      // Check if application exists for this student, term, and academic year
-      const { data: existingApp, error: selectError } = await supabase
+      // Find the country name for the selected nationality
+      const nationalityCountry = lookups.countries?.find(
+        c => c.id === formData.nationality_country_id
+      )?.country_name;
+
+      // Determine the location ID
+      const locationCodeId =
+        nationalityCountry && nationalityCountry.trim().toLowerCase() === 'uganda'
+          ? UG_LOCATION_ID
+          : GLOBAL_LOCATION_ID;
+
+      // Check if application exists
+      const { data: existingApp } = await supabase
         .from('application')
-        .select('student_id, term_id, academic_year_id')
+        .select('student_id')
         .eq('student_id', studentId)
         .eq('term_id', formData.term_id)
         .eq('academic_year_id', formData.academic_year_id)
-        .single();
+        .maybeSingle();
       if (existingApp) {
+        setAppSaveInfo('An application for this term and year already exists. Your information will be updated.');
         // Update existing application
         const { error: updateError } = await supabase
           .from('application')
           .update({
             degree_program_id: formData.degree_program_id,
             academic_level_id: formData.academic_level_id,
+            location_code_id: locationCodeId,
             // add other fields as needed
           })
           .eq('student_id', studentId)
@@ -187,6 +236,7 @@ const ApplicationForm: React.FC = () => {
               academic_year_id: formData.academic_year_id,
               degree_program_id: formData.degree_program_id,
               academic_level_id: formData.academic_level_id,
+              location_code_id: locationCodeId,
               // add other fields as needed
             }
           ]);
@@ -411,7 +461,13 @@ const ApplicationForm: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="mt-1 block w-full border border-gray-300 rounded-md p-[5px]" />
+                  <input
+                    type="text"
+                    name="email"
+                    value={formData.email}
+                    readOnly
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-[5px] bg-gray-100 cursor-not-allowed"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
@@ -501,6 +557,7 @@ const ApplicationForm: React.FC = () => {
               </div>
               {appSaveError && <div className="text-red-600 mt-4 text-base font-medium">{appSaveError}</div>}
               {appSaving && <div className="text-blue-600 mt-4 text-base font-medium">Saving...</div>}
+              {appSaveInfo && <div className="text-blue-600 mt-4 text-base font-medium">{appSaveInfo}</div>}
             </div>
             <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6">
               <button type="button" className="px-8 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold w-full sm:w-auto" onClick={() => setCurrentStep(prev => prev - 1)} disabled={appSaving}>Back</button>

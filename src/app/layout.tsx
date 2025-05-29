@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Open_Sans } from "next/font/google";
 import "./globals.css";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 
 const openSans = Open_Sans({ subsets: ["latin"] });
 
@@ -28,6 +29,3 @@ export default function RootLayout({
   );
 }
 
-export function Test() {
-  return <div>Test Page</div>;
-} 

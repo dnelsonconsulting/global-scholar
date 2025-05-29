@@ -49,9 +49,7 @@ const GlobalNav: React.FC = () => {
           {/* Desktop menu */}
           <div className="hidden md:flex space-x-4">
             <a href="/student/dashboard" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-blue hover:text-primary-navy">Dashboard</a>
-            <a href="/student/application" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-blue hover:text-primary-navy">Application</a>
-            <a href="#" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-blue hover:text-primary-navy">Courses</a>
-            <a href="#" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-blue hover:text-primary-navy">Profile</a>
+            <a href="/student/profile" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-blue hover:text-primary-navy">Profile</a>
           </div>
         </div>
       </div>
@@ -59,9 +57,7 @@ const GlobalNav: React.FC = () => {
       <div className={`md:hidden ${menuOpen ? 'block' : 'hidden'}`} id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-primary-navy">
           <a href="/student/dashboard" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-blue hover:text-primary-navy">Dashboard</a>
-          <a href="/student/application" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-blue hover:text-primary-navy">Application</a>
-          <a href="#" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-blue hover:text-primary-navy">Courses</a>
-          <a href="#" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-blue hover:text-primary-navy">Profile</a>
+          <a href="/student/profile" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-blue hover:text-primary-navy">Profile</a>
         </div>
       </div>
     </nav>

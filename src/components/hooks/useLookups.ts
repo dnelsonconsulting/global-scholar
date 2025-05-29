@@ -37,6 +37,21 @@ interface ApplicationStatus {
   status_name: string;
 }
 
+interface StudentType {
+  id: string;
+  student_type: string;
+}
+
+interface StudentLocation {
+  id: string;
+  location_code: string;
+}
+
+interface Scholarship {
+  id: string;
+  scholarship_code: string;
+}
+
 export const useLookups = () => {
   const [degreePrograms, setDegreePrograms] = useState<DegreeProgram[]>([]);
   const [academicLevels, setAcademicLevels] = useState<AcademicLevel[]>([]);
@@ -45,6 +60,9 @@ export const useLookups = () => {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
   const [applicationStatuses, setApplicationStatuses] = useState<ApplicationStatus[]>([]);
+  const [studentTypes, setStudentTypes] = useState<StudentType[]>([]);
+  const [studentLocations, setStudentLocations] = useState<StudentLocation[]>([]);
+  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
 
   useEffect(() => {
     const fetchDegreePrograms = async () => {
@@ -101,6 +119,30 @@ export const useLookups = () => {
         .order('status_name', { ascending: true });
       if (data) setApplicationStatuses(data as ApplicationStatus[]);
     };
+    const fetchStudentTypes = async () => {
+      const { data } = await supabase
+        .from('student_type')
+        .select('id, student_type')
+        .eq('is_active', true)
+        .order('student_type', { ascending: true });
+      if (data) setStudentTypes(data as StudentType[]);
+    };
+    const fetchStudentLocations = async () => {
+      const { data } = await supabase
+        .from('student_location')
+        .select('id, location_code')
+        .eq('is_active', true)
+        .order('location_code', { ascending: true });
+      if (data) setStudentLocations(data as StudentLocation[]);
+    };
+    const fetchScholarships = async () => {
+      const { data } = await supabase
+        .from('scholarships')
+        .select('id, scholarship_code')
+        .eq('is_active', true)
+        .order('scholarship_code', { ascending: true });
+      if (data) setScholarships(data as Scholarship[]);
+    };
     fetchDegreePrograms();
     fetchAcademicLevels();
     fetchCountries();
@@ -108,7 +150,10 @@ export const useLookups = () => {
     fetchAcademicYears();
     fetchTerms();
     fetchApplicationStatuses();
+    fetchStudentTypes();
+    fetchStudentLocations();
+    fetchScholarships();
   }, []);
 
-  return { degreePrograms, academicLevels, countries, genders, academicYears, terms, applicationStatuses };
+  return { degreePrograms, academicLevels, countries, genders, academicYears, terms, applicationStatuses, studentTypes, studentLocations, scholarships };
 }; 
